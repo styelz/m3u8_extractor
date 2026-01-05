@@ -6,7 +6,7 @@ A Python script that extracts m3u8 URLs from a website.
 
 - Fetches a website category page and scrolls to load all videos
 - Scrapes the page to find m3u8 video URLs
-- Generates an RSS feed as an HTML webpage with embedded feed and video listings
+- Generates a standard RSS feed XML file
 
 ## Installation
 
@@ -31,18 +31,15 @@ The script will:
 2. Scroll through the page to load all videos
 3. Extract m3u8 URLs from the page
 4. Extract article publication times from each page's meta properties
-5. Generate an HTML webpage with:
-   - Embedded RSS XML feed
-   - Formatted display of all extracted videos with clickable links
-   - Feed metadata and article publication times
+5. Generate an RSS XML feed file
 
 ## Output Files
 
-- **rss.html**: HTML webpage containing:
-  - Embedded RSS feed in XML format
-  - Formatted list of all extracted videos
-  - Clickable links to both page URLs and m3u8 URLs
-  - Article publication times from page meta properties
+- **rss.xml**: Standard RSS feed in XML format containing:
+  - Channel metadata (title, link, description, last build date)
+  - Feed items for each extracted video
+  - Links to original page URLs and m3u8 URLs
+  - Publication times from page meta properties
 
 ## Configuration
 
@@ -53,7 +50,7 @@ Edit the `category_url` variable in the `if __name__ == "__main__":` section to 
 1. **Fetch Page**: Loads the category page and scrolls to dynamically load all videos
 2. **Extract Links**: Finds all video page URLs from the loaded content
 3. **Scrape Pages**: Visits each page and searches for m3u8 URLs using regex patterns, also extracts the `article:published_time` meta property
-4. **Generate Feed**: Creates an HTML webpage with an embedded RSS feed and formatted video listings, using actual publication times
+4. **Generate Feed**: Creates an RSS XML feed with metadata and video entries
 
 ## Notes
 
@@ -62,5 +59,4 @@ Edit the `category_url` variable in the `if __name__ == "__main__":` section to 
 - Uses Playwright for dynamic page scrolling to load all content
 - Progress indicators show which page is being processed
 - Both successful and failed extractions are logged
-- The generated HTML file can be viewed in any web browser
-- The embedded RSS feed can be used in RSS feed readers
+- The generated RSS file is compatible with standard RSS feed readers

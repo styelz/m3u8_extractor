@@ -148,21 +148,10 @@ class RSSm3u8Extractor:
         
         return self.videos
     
-    def save_results(self, filename='m3u8_results.json'):
-        """Save results to JSON file"""
-        with open(filename, 'w') as f:
-            json.dump(self.videos, f, indent=2)
-        print(f"\nResults saved to {filename}")
+
     
-    def save_m3u8_list(self, filename='m3u8_urls.txt'):
-        """Save m3u8 URLs to text file"""
-        with open(filename, 'w') as f:
-            for video in self.videos:
-                f.write(f"{video['m3u8_url']}\n")
-        print(f"m3u8 URLs saved to {filename}")
-    
-    def generate_rss_webpage(self, filename='rss.html'):
-        """Generate an RSS feed as an HTML webpage"""
+    def generate_rss_feed(self, filename='rss.xml'):
+        """Generate an RSS feed as an XML file"""
         # Create RSS XML structure
         rss = ET.Element('rss', version='2.0')
         channel = ET.SubElement(rss, 'channel')
@@ -204,115 +193,10 @@ class RSSm3u8Extractor:
         # Remove extra blank lines
         xml_str = '\n'.join([line for line in xml_str.split('\n') if line.strip()])
         
-        # Create HTML webpage with embedded RSS and display
-        html_content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>m3u8 Video Feed</title>
-    <link rel="alternate" type="application/rss+xml" href="#" title="m3u8 Video Feed">
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }}
-        h1 {{
-            color: #333;
-        }}
-        .feed-info {{
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .video-item {{
-            background-color: #fff;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-left: 4px solid #0066cc;
-            border-radius: 3px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .video-item h3 {{
-            margin-top: 0;
-            color: #0066cc;
-        }}
-        .video-url {{
-            word-break: break-all;
-            font-family: monospace;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 3px;
-            font-size: 12px;
-        }}
-        .page-link {{
-            color: #0066cc;
-            text-decoration: none;
-        }}
-        .page-link:hover {{
-            text-decoration: underline;
-        }}
-        .timestamp {{
-            color: #666;
-            font-size: 12px;
-        }}
-        .rss-link {{
-            display: inline-block;
-            background-color: #ff6600;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 3px;
-            text-decoration: none;
-            margin-bottom: 20px;
-        }}
-        .rss-link:hover {{
-            background-color: #e55a00;
-        }}
-    </style>
-</head>
-<body>
-    <h1>m3u8 Video Feed</h1>
-    
-    <div class="feed-info">
-        <p><strong>Total Videos:</strong> {len(self.videos)}</p>
-        <p><strong>Source:</strong> <a href="{self.category_url}" class="page-link">{self.category_url}</a></p>
-        <p><strong>Generated:</strong> <span class="timestamp">{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</span></p>
-    </div>
-    
-    <div id="rss-section" style="background-color: #fff; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-        <h2>RSS Feed</h2>
-        <p>RSS feed is embedded below. You can subscribe to this feed in your feed reader:</p>
-        <pre style="background-color: #f9f9f9; padding: 10px; overflow-x: auto; border-radius: 3px;"><code>{xml_str}</code></pre>
-    </div>
-    
-    <h2>Videos</h2>
-"""
-        
-        # Add video items
-        for i, video in enumerate(self.videos, 1):
-            html_content += f"""    <div class="video-item">
-        <h3>Video #{i}</h3>
-        <p><strong>Page:</strong> <a href="{video['page_url']}" class="page-link" target="_blank">{video['page_url']}</a></p>
-        <p><strong>m3u8 URL:</strong></p>
-        <div class="video-url"><a href="{video['m3u8_url']}" target="_blank">{video['m3u8_url']}</a></div>
-        <p class="timestamp"><strong>Published:</strong> {video.get('published_time', 'Unknown')}</p>
-    </div>
-"""
-        
-        html_content += """
-</body>
-</html>
-"""
-        
-        # Write HTML file
+        # Write XML file
         with open(filename, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        print(f"\nRSS webpage generated: {filename}")
+            f.write(xml_str)
+        print(f"\nRSS feed generated: {filename}")
 
 
 if __name__ == "__main__":
@@ -325,7 +209,7 @@ if __name__ == "__main__":
     
     # Save results
     if videos:
-        extractor.generate_rss_webpage()
+        extractor.generate_rss_feed()
         print(f"\nSuccessfully extracted {len(videos)} m3u8 URLs")
     else:
         print("\nNo m3u8 URLs were extracted")
