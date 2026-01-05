@@ -1,13 +1,12 @@
-# RSS m3u8 Extractor
+# m3u8 Extractor
 
-A Python script that extracts m3u8 URLs from an RSS feed of video pages.
+A Python script that extracts m3u8 URLs from a website.
 
 ## Features
 
-- Fetches RSS feed from a given URL
-- Extracts individual page URLs from RSS items
-- Scrapes each page to find m3u8 video URLs
-- Saves results in multiple formats (JSON and text)
+- Fetches a website category page and scrolls to load all videos
+- Scrapes the page to find m3u8 video URLs
+- Generates an RSS feed as an HTML webpage with embedded feed and video listings
 
 ## Installation
 
@@ -24,40 +23,43 @@ playwright install chromium
 ## Usage
 
 ```bash
-python rss_m3u8_extractor.py
+python m3u8_extractor.py
 ```
 
 The script will:
-1. Fetch the RSS feed from the configured URL
-2. Extract all page URLs from RSS items
-3. Visit each page and search for m3u8 URLs
-4. Save results to:
-   - `m3u8_results.json` - Full details with timestamps
-   - `m3u8_urls.txt` - Just the m3u8 URLs (one per line)
+1. Fetch the website from the configured URL
+2. Scroll through the page to load all videos
+3. Extract m3u8 URLs from the page
+4. Generate an HTML webpage with:
+   - Embedded RSS XML feed
+   - Formatted display of all extracted videos with clickable links
+   - Feed metadata and extraction timestamps
 
 ## Output Files
 
-- **m3u8_results.json**: JSON file containing:
-  - Page URL
-  - m3u8 URL
-  - Extraction timestamp
-
-- **m3u8_urls.txt**: Plain text file with m3u8 URLs (one per line)
+- **rss.html**: HTML webpage containing:
+  - Embedded RSS feed in XML format
+  - Formatted list of all extracted videos
+  - Clickable links to both page URLs and m3u8 URLs
+  - Extraction timestamps for each video
 
 ## Configuration
 
-Edit the `rss_url` variable in the `if __name__ == "__main__":` section to use a different RSS feed.
+Edit the `category_url` variable in the `if __name__ == "__main__":` section to use a different website URL.
 
 ## How it works
 
-1. **Fetch RSS**: Downloads and parses the RSS feed
-2. **Extract Links**: Gets the URL for each video page from the RSS items
+1. **Fetch Page**: Loads the category page and scrolls to dynamically load all videos
+2. **Extract Links**: Finds all video page URLs from the loaded content
 3. **Scrape Pages**: Visits each page and searches for m3u8 URLs using regex patterns
-4. **Save Results**: Exports findings to JSON and text formats
+4. **Generate Feed**: Creates an HTML webpage with an embedded RSS feed and formatted video listings
 
 ## Notes
 
 - The script includes error handling for network timeouts and failures
 - Uses User-Agent header to avoid being blocked by some servers
+- Uses Playwright for dynamic page scrolling to load all content
 - Progress indicators show which page is being processed
 - Both successful and failed extractions are logged
+- The generated HTML file can be viewed in any web browser
+- The embedded RSS feed can be used in RSS feed readers
