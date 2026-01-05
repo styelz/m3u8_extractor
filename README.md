@@ -30,10 +30,11 @@ The script will:
 1. Fetch the website from the configured URL
 2. Scroll through the page to load all videos
 3. Extract m3u8 URLs from the page
-4. Generate an HTML webpage with:
+4. Extract article publication times from each page's meta properties
+5. Generate an HTML webpage with:
    - Embedded RSS XML feed
    - Formatted display of all extracted videos with clickable links
-   - Feed metadata and extraction timestamps
+   - Feed metadata and article publication times
 
 ## Output Files
 
@@ -41,7 +42,7 @@ The script will:
   - Embedded RSS feed in XML format
   - Formatted list of all extracted videos
   - Clickable links to both page URLs and m3u8 URLs
-  - Extraction timestamps for each video
+  - Article publication times from page meta properties
 
 ## Configuration
 
@@ -51,8 +52,8 @@ Edit the `category_url` variable in the `if __name__ == "__main__":` section to 
 
 1. **Fetch Page**: Loads the category page and scrolls to dynamically load all videos
 2. **Extract Links**: Finds all video page URLs from the loaded content
-3. **Scrape Pages**: Visits each page and searches for m3u8 URLs using regex patterns
-4. **Generate Feed**: Creates an HTML webpage with an embedded RSS feed and formatted video listings
+3. **Scrape Pages**: Visits each page and searches for m3u8 URLs using regex patterns, also extracts the `article:published_time` meta property
+4. **Generate Feed**: Creates an HTML webpage with an embedded RSS feed and formatted video listings, using actual publication times
 
 ## Notes
 

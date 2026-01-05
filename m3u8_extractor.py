@@ -82,11 +82,18 @@ class RSSm3u8Extractor:
         return page_urls
     
     def extract_m3u8_from_page(self, page_url):
-        """Extract m3u8 URL from a page"""
+        """Extract m3u8 URL and published time from a page"""
         try:
             response = requests.get(page_url, headers=self.headers, timeout=10)
             response.raise_for_status()
             html_content = response.text
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # Extract article:published_time meta property
+            published_time = None
+            meta_tag = soup.find('meta', property='article:published_time')
+            if meta_tag and meta_tag.get('content'):
+                published_time = meta_tag['content']
             
             # Look for m3u8 URL in various common patterns
             patterns = [
@@ -95,6 +102,7 @@ class RSSm3u8Extractor:
                 r"'([^']*\.m3u8[^']*)'",
             ]
             
+            m3u8_url = None
             for pattern in patterns:
                 matches = re.findall(pattern, html_content)
                 if matches:
@@ -102,12 +110,13 @@ class RSSm3u8Extractor:
                     m3u8_url = matches[0]
                     if isinstance(m3u8_url, tuple):
                         m3u8_url = m3u8_url[0]
-                    return m3u8_url.strip()
+                    m3u8_url = m3u8_url.strip()
+                    break
             
-            return None
+            return m3u8_url, published_time
         except requests.RequestException as e:
             print(f"Error fetching page {page_url}: {e}")
-            return None
+            return None, None
     
     def process(self):
         """Main processing function"""
@@ -125,13 +134,13 @@ class RSSm3u8Extractor:
         print("\nExtracting m3u8 URLs from each page...")
         for i, page_url in enumerate(page_urls, 1):
             print(f"[{i}/{len(page_urls)}] Processing: {page_url}")
-            m3u8_url = self.extract_m3u8_from_page(page_url)
+            m3u8_url, published_time = self.extract_m3u8_from_page(page_url)
             
             if m3u8_url:
                 self.videos.append({
                     'page_url': page_url,
                     'm3u8_url': m3u8_url,
-                    'extracted_at': datetime.now().isoformat()
+                    'published_time': published_time
                 })
                 print(f"  ✓ Found m3u8: {m3u8_url[:80]}...")
             else:
@@ -188,7 +197,7 @@ class RSSm3u8Extractor:
             item_guid.text = video['m3u8_url']
             
             pub_date = ET.SubElement(item, 'pubDate')
-            pub_date.text = video['extracted_at']
+            pub_date.text = video.get('published_time', datetime.now().strftime('%a, %d %b %Y %H:%M:%S +0000'))
         
         # Pretty print XML
         xml_str = minidom.parseString(ET.tostring(rss)).toprettyxml(indent='  ')
@@ -291,7 +300,7 @@ class RSSm3u8Extractor:
         <p><strong>Page:</strong> <a href="{video['page_url']}" class="page-link" target="_blank">{video['page_url']}</a></p>
         <p><strong>m3u8 URL:</strong></p>
         <div class="video-url"><a href="{video['m3u8_url']}" target="_blank">{video['m3u8_url']}</a></div>
-        <p class="timestamp"><strong>Extracted:</strong> {video['extracted_at']}</p>
+        <p class="timestamp"><strong>Published:</strong> {video.get('published_time', 'Unknown')}</p>
     </div>
 """
         
