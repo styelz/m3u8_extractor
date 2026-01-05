@@ -150,6 +150,25 @@ class RSSm3u8Extractor:
     
 
     
+    def _format_rss_date(self, date_str):
+        """Convert ISO 8601 date to RFC 2822 format for RSS compatibility"""
+        if not date_str:
+            return datetime.now().strftime('%a, %d %b %Y %H:%M:%S +0000')
+        
+        try:
+            # Try parsing ISO 8601 format
+            if 'T' in date_str:
+                # Remove timezone info and parse
+                date_str_clean = date_str.replace('+00:00', '').replace('Z', '')
+                dt = datetime.fromisoformat(date_str_clean)
+            else:
+                # Already in standard format or other format
+                return date_str
+            
+            return dt.strftime('%a, %d %b %Y %H:%M:%S +0000')
+        except:
+            return datetime.now().strftime('%a, %d %b %Y %H:%M:%S +0000')
+    
     def generate_rss_feed(self, filename='rss.xml'):
         """Generate an RSS feed as an XML file"""
         # Create RSS XML structure
@@ -186,7 +205,13 @@ class RSSm3u8Extractor:
             item_guid.text = video['m3u8_url']
             
             pub_date = ET.SubElement(item, 'pubDate')
-            pub_date.text = video.get('published_time', datetime.now().strftime('%a, %d %b %Y %H:%M:%S +0000'))
+            pub_date.text = self._format_rss_date(video.get('published_time'))
+            
+            # Add enclosure for media (important for podcast readers)
+            enclosure = ET.SubElement(item, 'enclosure')
+            enclosure.set('url', video['m3u8_url'])
+            enclosure.set('type', 'application/x-mpegURL')
+            enclosure.set('length', '0')
         
         # Pretty print XML
         xml_str = minidom.parseString(ET.tostring(rss)).toprettyxml(indent='  ')
