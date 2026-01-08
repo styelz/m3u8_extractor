@@ -39,8 +39,7 @@ class RSSm3u8Extractor:
                 
                 # Scroll to load more content
                 last_height = page.evaluate("document.body.scrollHeight")
-                scroll_pause_time = 2
-                scroll_delay = 5  # 5 second delay between each scroll
+                scroll_pause_time = 5  # seconds
                 max_scrolls = 20  # Limit scrolls to avoid infinite scrolling
                 scroll_count = 0
                 
@@ -62,9 +61,6 @@ class RSSm3u8Extractor:
                     if self.limit_first_page:
                         print("Limiting to first page only (--first-page flag set)")
                         break
-                    
-                    # Wait 5 seconds before next scroll
-                    time.sleep(scroll_delay)
                 
                 # Get page content
                 html_content = page.content()
