@@ -26,9 +26,17 @@ playwright install chromium
 python m3u8_extractor.py
 ```
 
+### Command-line Options
+
+- `--first-page`: Only process the first page without scrolling for more content
+
+```bash
+python m3u8_extractor.py --first-page
+```
+
 The script will:
 1. Fetch the website from the configured URL
-2. Scroll through the page to load all videos
+2. Scroll through the page to load all videos (or stop after the first page if `--first-page` is used)
 3. Extract m3u8 URLs from the page
 4. Extract article publication times from each page's meta properties
 5. Generate an RSS XML feed file

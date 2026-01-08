@@ -8,14 +8,16 @@ import time
 from playwright.sync_api import sync_playwright
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import argparse
 
 # Register media namespace for RSS
 ET.register_namespace('media', 'http://search.yahoo.com/mrss/')
 
 class RSSm3u8Extractor:
-    def __init__(self, category_url):
+    def __init__(self, category_url, limit_first_page=False):
         self.category_url = category_url
         self.videos = []
+        self.limit_first_page = limit_first_page
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
@@ -54,6 +56,11 @@ class RSSm3u8Extractor:
                     last_height = new_height
                     scroll_count += 1
                     print(f"Scroll {scroll_count}/{max_scrolls}")
+                    
+                    # Stop after first scroll if limit_first_page is set
+                    if self.limit_first_page:
+                        print("Limiting to first page only (--first-page flag set)")
+                        break
                 
                 # Get page content
                 html_content = page.content()
@@ -306,11 +313,16 @@ class RSSm3u8Extractor:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Extract m3u8 URLs from fintech.tv category page and generate RSS feed')
+    parser.add_argument('--first-page', action='store_true', 
+                        help='Only process the first page without scrolling for more content')
+    args = parser.parse_args()
+    
     # Category page URL (loads more videos on scroll)
     category_url = "https://fintech.tv/category/market-movers-the-opening-bell/"
     
     # Create extractor and process
-    extractor = RSSm3u8Extractor(category_url)
+    extractor = RSSm3u8Extractor(category_url, limit_first_page=args.first_page)
     videos = extractor.process()
     
     # Save results
