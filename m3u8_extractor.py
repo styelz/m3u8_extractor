@@ -238,10 +238,7 @@ class RSSm3u8Extractor:
     def generate_rss_feed(self, filename='rss.xml'):
         """Generate an RSS feed as an XML file with rich metadata"""
         # Create RSS XML structure with media namespace
-        rss = ET.Element('rss', {
-            'version': '2.0',
-            'xmlns:media': 'http://search.yahoo.com/mrss/'
-        })
+        rss = ET.Element('rss', {'version': '2.0'})
         channel = ET.SubElement(rss, 'channel')
         
         # Add channel metadata
@@ -305,17 +302,12 @@ class RSSm3u8Extractor:
         
         # Convert to string and pretty print
         xml_bytes = ET.tostring(rss, encoding='utf-8')
-        # Decode and parse for pretty printing
-        try:
-            dom = minidom.parseString(xml_bytes)
-            xml_str = dom.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
-        except Exception as e:
-            # If minidom fails, just use the raw XML with basic formatting
-            print(f"Warning: Could not pretty-print XML ({e}), using basic formatting")
-            xml_str = xml_bytes.decode('utf-8')
+        dom = minidom.parseString(xml_bytes)
+        xml_str = dom.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
         
-        # Remove extra blank lines
-        xml_str = '\n'.join([line for line in xml_str.split('\n') if line.strip()])
+        # Remove extra blank lines and XML declaration if present
+        lines = [line for line in xml_str.split('\n') if line.strip()]
+        xml_str = '\n'.join(lines)
         
         # Write XML file
         with open(filename, 'w', encoding='utf-8') as f:
