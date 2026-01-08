@@ -9,6 +9,9 @@ from playwright.sync_api import sync_playwright
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
+# Register media namespace for RSS
+ET.register_namespace('media', 'http://search.yahoo.com/mrss/')
+
 class RSSm3u8Extractor:
     def __init__(self, category_url):
         self.category_url = category_url
@@ -82,18 +85,70 @@ class RSSm3u8Extractor:
         return page_urls
     
     def extract_m3u8_from_page(self, page_url):
-        """Extract m3u8 URL and published time from a page"""
+        """Extract m3u8 URL and metadata from a page"""
         try:
             response = requests.get(page_url, headers=self.headers, timeout=10)
             response.raise_for_status()
             html_content = response.text
             soup = BeautifulSoup(html_content, 'html.parser')
             
-            # Extract article:published_time meta property
-            published_time = None
+            # Extract Open Graph and metadata properties
+            metadata = {
+                'title': None,
+                'description': None,
+                'published_time': None,
+                'modified_time': None,
+                'image': None,
+                'image_width': None,
+                'image_height': None,
+                'author': None,
+                'og_url': None
+            }
+            
+            # Extract og:title
+            meta_tag = soup.find('meta', property='og:title')
+            if meta_tag and meta_tag.get('content'):
+                metadata['title'] = meta_tag['content']
+            
+            # Extract og:description
+            meta_tag = soup.find('meta', property='og:description')
+            if meta_tag and meta_tag.get('content'):
+                metadata['description'] = meta_tag['content']
+            
+            # Extract article:published_time
             meta_tag = soup.find('meta', property='article:published_time')
             if meta_tag and meta_tag.get('content'):
-                published_time = meta_tag['content']
+                metadata['published_time'] = meta_tag['content']
+            
+            # Extract article:modified_time
+            meta_tag = soup.find('meta', property='article:modified_time')
+            if meta_tag and meta_tag.get('content'):
+                metadata['modified_time'] = meta_tag['content']
+            
+            # Extract og:image
+            meta_tag = soup.find('meta', property='og:image')
+            if meta_tag and meta_tag.get('content'):
+                metadata['image'] = meta_tag['content']
+            
+            # Extract og:image:width
+            meta_tag = soup.find('meta', property='og:image:width')
+            if meta_tag and meta_tag.get('content'):
+                metadata['image_width'] = meta_tag['content']
+            
+            # Extract og:image:height
+            meta_tag = soup.find('meta', property='og:image:height')
+            if meta_tag and meta_tag.get('content'):
+                metadata['image_height'] = meta_tag['content']
+            
+            # Extract author
+            meta_tag = soup.find('meta', attrs={'name': 'author'})
+            if meta_tag and meta_tag.get('content'):
+                metadata['author'] = meta_tag['content']
+            
+            # Extract og:url
+            meta_tag = soup.find('meta', property='og:url')
+            if meta_tag and meta_tag.get('content'):
+                metadata['og_url'] = meta_tag['content']
             
             # Look for m3u8 URL in various common patterns
             patterns = [
@@ -113,10 +168,10 @@ class RSSm3u8Extractor:
                     m3u8_url = m3u8_url.strip()
                     break
             
-            return m3u8_url, published_time
+            return m3u8_url, metadata
         except requests.RequestException as e:
             print(f"Error fetching page {page_url}: {e}")
-            return None, None
+            return None, {}
     
     def process(self):
         """Main processing function"""
@@ -131,16 +186,16 @@ class RSSm3u8Extractor:
         page_urls = self.extract_page_urls_from_content(soup)
         print(f"Found {len(page_urls)} video page URLs")
         
-        print("\nExtracting m3u8 URLs from each page...")
+        print("\nExtracting m3u8 URLs and metadata from each page...")
         for i, page_url in enumerate(page_urls, 1):
             print(f"[{i}/{len(page_urls)}] Processing: {page_url}")
-            m3u8_url, published_time = self.extract_m3u8_from_page(page_url)
+            m3u8_url, metadata = self.extract_m3u8_from_page(page_url)
             
             if m3u8_url:
                 self.videos.append({
                     'page_url': page_url,
                     'm3u8_url': m3u8_url,
-                    'published_time': published_time
+                    'metadata': metadata
                 })
                 print(f"  ✓ Found m3u8: {m3u8_url[:80]}...")
             else:
@@ -170,9 +225,10 @@ class RSSm3u8Extractor:
             return datetime.now().strftime('%a, %d %b %Y %H:%M:%S +0000')
     
     def generate_rss_feed(self, filename='rss.xml'):
-        """Generate an RSS feed as an XML file"""
-        # Create RSS XML structure
+        """Generate an RSS feed as an XML file with rich metadata"""
+        # Create RSS XML structure with media namespace
         rss = ET.Element('rss', version='2.0')
+        rss.set('xmlns:media', 'http://search.yahoo.com/mrss/')
         channel = ET.SubElement(rss, 'channel')
         
         # Add channel metadata
@@ -191,21 +247,42 @@ class RSSm3u8Extractor:
         # Add items for each video
         for video in self.videos:
             item = ET.SubElement(channel, 'item')
+            metadata = video.get('metadata', {})
             
+            # Use og:title if available, otherwise fallback to generic title
             item_title = ET.SubElement(item, 'title')
-            item_title.text = f'Video - {video["m3u8_url"][:50]}...'
+            item_title.text = metadata.get('title') or f'Video - {video["m3u8_url"][:50]}...'
             
+            # Use og:url if available, otherwise use page_url
             item_link = ET.SubElement(item, 'link')
-            item_link.text = video['page_url']
+            item_link.text = metadata.get('og_url') or video['page_url']
             
+            # Use og:description if available
             item_description = ET.SubElement(item, 'description')
-            item_description.text = f'm3u8 URL: {video["m3u8_url"]}'
+            description_text = metadata.get('description') or f'm3u8 URL: {video["m3u8_url"]}'
+            item_description.text = description_text
+            
+            # Add author if available
+            if metadata.get('author'):
+                item_author = ET.SubElement(item, 'author')
+                item_author.text = metadata['author']
             
             item_guid = ET.SubElement(item, 'guid', isPermaLink='false')
             item_guid.text = video['m3u8_url']
             
+            # Use published_time from metadata
             pub_date = ET.SubElement(item, 'pubDate')
-            pub_date.text = self._format_rss_date(video.get('published_time'))
+            pub_date.text = self._format_rss_date(metadata.get('published_time'))
+            
+            # Add image as media:content if available
+            if metadata.get('image'):
+                media_content = ET.SubElement(item, '{http://search.yahoo.com/mrss/}content')
+                media_content.set('url', metadata['image'])
+                media_content.set('type', 'image/jpeg')
+                if metadata.get('image_width'):
+                    media_content.set('width', metadata['image_width'])
+                if metadata.get('image_height'):
+                    media_content.set('height', metadata['image_height'])
             
             # Add enclosure for media (important for podcast readers)
             enclosure = ET.SubElement(item, 'enclosure')
