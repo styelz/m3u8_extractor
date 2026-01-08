@@ -238,8 +238,10 @@ class RSSm3u8Extractor:
     def generate_rss_feed(self, filename='rss.xml'):
         """Generate an RSS feed as an XML file with rich metadata"""
         # Create RSS XML structure with media namespace
-        rss = ET.Element('rss', version='2.0')
-        rss.set('xmlns:media', 'http://search.yahoo.com/mrss/')
+        rss = ET.Element('rss', {
+            'version': '2.0',
+            'xmlns:media': 'http://search.yahoo.com/mrss/'
+        })
         channel = ET.SubElement(rss, 'channel')
         
         # Add channel metadata
