@@ -28,26 +28,21 @@ python m3u8_extractor.py
 
 ### Command-line Options
 
-- `--first-page`: Only process the first page without scrolling for more content
 - `--max-scrolls NUM`: Maximum number of scrolls to perform (default: 20)
 
 #### Examples
 
 ```bash
-python m3u8_extractor.py --first-page
+python m3u8_extractor.py --max-scrolls 1
 ```
 
 ```bash
 python m3u8_extractor.py --max-scrolls 50
 ```
 
-```bash
-python m3u8_extractor.py --first-page --max-scrolls 10
-```
-
 The script will:
 1. Fetch the website from the configured URL
-2. Scroll through the page to load all videos (or stop after the first page if `--first-page` is used)
+2. Scroll through the page to load all videos (limited by --max-scrolls parameter)
 3. Extract m3u8 URLs from the page
 4. Extract article publication times from each page's meta properties
 5. Generate an RSS XML feed file

@@ -14,10 +14,9 @@ import argparse
 ET.register_namespace('media', 'http://search.yahoo.com/mrss/')
 
 class RSSm3u8Extractor:
-    def __init__(self, category_url, limit_first_page=False, max_scrolls=20):
+    def __init__(self, category_url, max_scrolls=20):
         self.category_url = category_url
         self.videos = []
-        self.limit_first_page = limit_first_page
         self.max_scrolls = max_scrolls
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -56,11 +55,6 @@ class RSSm3u8Extractor:
                     last_height = new_height
                     scroll_count += 1
                     print(f"Scroll {scroll_count}/{self.max_scrolls}")
-                    
-                    # Stop after first scroll if limit_first_page is set
-                    if self.limit_first_page:
-                        print("Limiting to first page only (--first-page flag set)")
-                        break
                 
                 # Get page content
                 html_content = page.content()
@@ -237,11 +231,8 @@ class RSSm3u8Extractor:
     
     def generate_rss_feed(self, filename='rss.xml'):
         """Generate an RSS feed as an XML file with rich metadata"""
-        # Create RSS XML structure with media namespace
-        rss = ET.Element('rss', {
-            'version': '2.0',
-            'xmlns:media': 'http://search.yahoo.com/mrss/'
-        })
+        # Create RSS XML structure (namespace is registered at top of file)
+        rss = ET.Element('rss', {'version': '2.0'})
         channel = ET.SubElement(rss, 'channel')
         
         # Add channel metadata
@@ -325,8 +316,6 @@ class RSSm3u8Extractor:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract m3u8 URLs from fintech.tv category page and generate RSS feed')
-    parser.add_argument('--first-page', action='store_true', 
-                        help='Only process the first page without scrolling for more content')
     parser.add_argument('--max-scrolls', type=int, default=20, metavar='NUM',
                         help='Maximum number of scrolls to perform (default: 20)')
     args = parser.parse_args()
@@ -335,7 +324,7 @@ if __name__ == "__main__":
     category_url = "https://fintech.tv/category/market-movers-the-opening-bell/"
     
     # Create extractor and process
-    extractor = RSSm3u8Extractor(category_url, limit_first_page=args.first_page, max_scrolls=args.max_scrolls)
+    extractor = RSSm3u8Extractor(category_url, max_scrolls=args.max_scrolls)
     videos = extractor.process()
     
     # Save results
