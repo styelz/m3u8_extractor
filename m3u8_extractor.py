@@ -29,7 +29,11 @@ class RSSm3u8Extractor:
                 page = browser.new_page()
                 
                 print(f"Loading page: {self.category_url}")
-                page.goto(self.category_url, wait_until="networkidle")
+                try:
+                    page.goto(self.category_url, wait_until="load", timeout=30000)
+                except Exception as e:
+                    print(f"Warning: Page load encountered an issue: {e}")
+                    print("Continuing anyway as page may have partially loaded...")
                 
                 # Scroll to load more content
                 last_height = page.evaluate("document.body.scrollHeight")
