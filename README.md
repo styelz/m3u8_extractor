@@ -29,9 +29,20 @@ python m3u8_extractor.py
 ### Command-line Options
 
 - `--first-page`: Only process the first page without scrolling for more content
+- `--max-scrolls NUM`: Maximum number of scrolls to perform (default: 20)
+
+#### Examples
 
 ```bash
 python m3u8_extractor.py --first-page
+```
+
+```bash
+python m3u8_extractor.py --max-scrolls 50
+```
+
+```bash
+python m3u8_extractor.py --first-page --max-scrolls 10
 ```
 
 The script will:
