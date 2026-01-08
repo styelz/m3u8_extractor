@@ -303,8 +303,17 @@ class RSSm3u8Extractor:
             enclosure.set('type', 'application/x-mpegURL')
             enclosure.set('length', '0')
         
-        # Pretty print XML
-        xml_str = minidom.parseString(ET.tostring(rss)).toprettyxml(indent='  ')
+        # Convert to string and pretty print
+        xml_bytes = ET.tostring(rss, encoding='utf-8')
+        # Decode and parse for pretty printing
+        try:
+            dom = minidom.parseString(xml_bytes)
+            xml_str = dom.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+        except Exception as e:
+            # If minidom fails, just use the raw XML with basic formatting
+            print(f"Warning: Could not pretty-print XML ({e}), using basic formatting")
+            xml_str = xml_bytes.decode('utf-8')
+        
         # Remove extra blank lines
         xml_str = '\n'.join([line for line in xml_str.split('\n') if line.strip()])
         
