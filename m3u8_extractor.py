@@ -40,6 +40,7 @@ class RSSm3u8Extractor:
                 # Scroll to load more content
                 last_height = page.evaluate("document.body.scrollHeight")
                 scroll_pause_time = 2
+                scroll_delay = 5  # 5 second delay between each scroll
                 max_scrolls = 20  # Limit scrolls to avoid infinite scrolling
                 scroll_count = 0
                 
@@ -61,6 +62,9 @@ class RSSm3u8Extractor:
                     if self.limit_first_page:
                         print("Limiting to first page only (--first-page flag set)")
                         break
+                    
+                    # Wait 5 seconds before next scroll
+                    time.sleep(scroll_delay)
                 
                 # Get page content
                 html_content = page.content()
@@ -238,7 +242,10 @@ class RSSm3u8Extractor:
     def generate_rss_feed(self, filename='rss.xml'):
         """Generate an RSS feed as an XML file with rich metadata"""
         # Create RSS XML structure with media namespace
-        rss = ET.Element('rss', {'version': '2.0'})
+        rss = ET.Element('rss', {
+            'version': '2.0',
+            'xmlns:media': 'http://search.yahoo.com/mrss/'
+        })
         channel = ET.SubElement(rss, 'channel')
         
         # Add channel metadata
@@ -302,12 +309,17 @@ class RSSm3u8Extractor:
         
         # Convert to string and pretty print
         xml_bytes = ET.tostring(rss, encoding='utf-8')
-        dom = minidom.parseString(xml_bytes)
-        xml_str = dom.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+        # Decode and parse for pretty printing
+        try:
+            dom = minidom.parseString(xml_bytes)
+            xml_str = dom.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+        except Exception as e:
+            # If minidom fails, just use the raw XML with basic formatting
+            print(f"Warning: Could not pretty-print XML ({e}), using basic formatting")
+            xml_str = xml_bytes.decode('utf-8')
         
-        # Remove extra blank lines and XML declaration if present
-        lines = [line for line in xml_str.split('\n') if line.strip()]
-        xml_str = '\n'.join(lines)
+        # Remove extra blank lines
+        xml_str = '\n'.join([line for line in xml_str.split('\n') if line.strip()])
         
         # Write XML file
         with open(filename, 'w', encoding='utf-8') as f:
